@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Julia Flower - Генератор цветочка</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .controls {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            display: inline-block;
+            min-width: 300px;
+        }
+        
+        .control-group {
+            margin: 15px 0;
+            text-align: left;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin: 5px 0;
+        }
+        
+        .value-display {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .color-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .color-control {
+            text-align: center;
+        }
+        
+        input[type="color"] {
+            width: 50px;
+            height: 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: scale(1.05);
+        }
+        
+        #canvas-container {
+            margin: 20px 0;
+            display: inline-block;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌸 Julia Flower</h1>
+        <p class="subtitle">Генератор стилизованного 2D цветочка</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="petals">Количество лепестков:</label>
+                <input type="range" id="petals" min="3" max="20" value="8">
+                <div class="value-display">Значение: <span id="petals-value">8</span></div>
+            </div>
+            
+            <div class="control-group">
+                <label for="size">Размер цветка:</label>
+                <input type="range" id="size" min="50" max="200" value="100">
+                <div class="value-display">Значение: <span id="size-value">100</span></div>
+            </div>
+            
+            <div class="control-group">
+                <label for="complexity">Сложность узора:</label>
+                <input type="range" id="complexity" min="1" max="10" value="5">
+                <div class="value-display">Значение: <span id="complexity-value">5</span></div>
+            </div>
+            
+            <div class="control-group">
+                <label for="rotation">Поворот:</label>
+                <input type="range" id="rotation" min="0" max="360" value="0">
+                <div class="value-display">Значение: <span id="rotation-value">0</span>°</div>
+            </div>
+            
+            <div class="color-controls">
+                <div class="color-control">
+                    <label for="center-color">Цвет центра:</label>
+                    <input type="color" id="center-color" value="#ff6b9d">
+                </div>
+                <div class="color-control">
+                    <label for="petal-color">Цвет лепестков:</label>
+                    <input type="color" id="petal-color" value="#ff9ecd">
+                </div>
+                <div class="color-control">
+                    <label for="background-color">Цвет фона:</label>
+                    <input type="color" id="background-color" value="#2c3e50">
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <button onclick="randomizeFlower()">🎲 Случайный цветок</button>
+                <button onclick="saveImage()">💾 Сохранить</button>
+            </div>
+        </div>
+        
+        <div id="canvas-container"></div>
+    </div>
+    
+    <script src="sketch.js"></script>
+</body>
+</html>
