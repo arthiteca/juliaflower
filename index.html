@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quantum Julia 3D</title>
+    <title>Julia Flower 2.0</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300&display=swap');
+        /* Подключаем шрифты с поддержкой кириллицы */
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;500&display=swap');
 
         body, html {
             margin: 0;
@@ -22,7 +23,28 @@
             height: 100%;
         }
 
-        /* Интерфейс */
+        /* Верхний заголовок */
+        #app-header {
+            position: absolute;
+            top: 30px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        #app-header h2 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.3);
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            margin: 0;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Нижний интерфейс */
         .ui-container {
             position: absolute;
             bottom: 40px;
@@ -39,7 +61,7 @@
 
         .flower-title {
             font-family: 'Cinzel', serif;
-            font-size: 3rem;
+            font-size: 3.5rem; /* Чуть крупнее для кириллицы */
             color: white;
             text-shadow: 0 0 30px rgba(255, 255, 255, 0.8), 0 0 10px rgba(255, 0, 128, 0.5);
             margin-bottom: 5px;
@@ -49,13 +71,14 @@
         }
 
         .flower-subtitle {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.6);
-            letter-spacing: 4px;
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 3px;
             text-transform: uppercase;
-            margin-bottom: 30px;
+            margin-bottom: 35px;
             opacity: 0;
             transition: opacity 1s ease 0.2s;
+            font-weight: 500;
         }
 
         .btn {
@@ -63,7 +86,7 @@
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.3);
             color: #fff;
-            padding: 16px 48px;
+            padding: 18px 55px;
             font-size: 1.1rem;
             border-radius: 50px;
             cursor: pointer;
@@ -76,8 +99,8 @@
         }
 
         .btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.4);
             transform: scale(1.05);
             border-color: #fff;
         }
@@ -99,18 +122,24 @@
             transform: translate(-50%, -50%);
             color: rgba(255,255,255,0.2);
             pointer-events: none;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 2px;
         }
     </style>
 </head>
 <body>
 
-    <div class="loader" id="hint">Нажмите кнопку</div>
+    <div id="app-header">
+        <h2>Julia Flower 2.0</h2>
+    </div>
+
+    <div class="loader" id="hint">Нажмите кнопку для рождения цветка</div>
     <canvas id="glCanvas"></canvas>
 
     <div class="ui-container">
-        <div class="flower-title" id="nameDisplay">Genesis</div>
-        <div class="flower-subtitle" id="dnaDisplay">4D Quaternion Fractal</div>
-        <button class="btn" id="genBtn">Воплотить</button>
+        <div class="flower-title" id="nameDisplay">Генезис</div>
+        <div class="flower-subtitle" id="dnaDisplay">Начало Времен</div>
+        <button class="btn" id="genBtn">Создать Цветок</button>
     </div>
 
     <!-- Vertex Shader -->
@@ -158,7 +187,7 @@
             trap = 100.0; // "Ловушка" орбиты для окрашивания
 
             // Фрактальная итерация
-            for(int i = 0; i < 8; i++) {
+            for(int i = 0; i < 9; i++) {
                 // Производная для оценки расстояния |dz| = 2 * |z| * |dz|
                 md2 *= 4.0 * mz2; 
                 
@@ -185,7 +214,7 @@
             vec3 rd = normalize(vec3(uv, 1.5)); // Направление луча
 
             // Вращение камеры вокруг объекта
-            float camRot = u_time * 0.15;
+            float camRot = u_time * 0.12;
             ro.xz *= rot(camRot);
             rd.xz *= rot(camRot);
             
@@ -206,7 +235,7 @@
                 float currentTrap;
                 d = map(p, currentTrap);
                 
-                // Магия свечения: чем ближе мы к фракталу, тем ярче, даже если не попали
+                // Магия свечения: чем ближе мы к фракталу, тем ярче
                 glow += 0.02 / (0.02 + abs(d)); 
 
                 if(d < 0.001 || t > 5.0) {
@@ -222,8 +251,7 @@
                 // Мы попали в фрактал
                 vec3 p = ro + rd * t;
                 
-                // Простейшее освещение на основе Orbit Trap
-                // Чем "глубже" точка ушла в математику, тем она ярче или другого цвета
+                // Окрашивание на основе Orbit Trap
                 float tVal = clamp(trap, 0.0, 1.0);
                 
                 // Смешиваем два цвета на основе геометрии
@@ -326,34 +354,33 @@
 
         // --- Generator Logic ---
 
-        const femaleNames = [
-            "Anastasia", "Seraphina", "Isolde", "Ophelia", "Genevieve", 
-            "Cassandra", "Valentina", "Dominiqua", "Eleonora", "Ariadne",
-            "Calista", "Lorelei", "Magnolia", "Octavia", "Persephone",
-            "Rosalind", "Vivienne", "Zephyrine", "Lysandra", "Melisandre",
-            "Evangeline", "Thalia", "Calliope", "Selene", "Freya"
+        const rusNames = [
+            "Анастасия", "Виктория", "Изольда", "Серафима", "Василиса", 
+            "Элеонора", "Маргарита", "Евдокия", "Аврора", "Кассандра", 
+            "Белла", "Мирослава", "Ариадна", "Злата", "Ева", 
+            "Снежана", "Лилия", "Виолетта", "Камилла", "Элина",
+            "Оливия", "Таисия", "Феодора", "Лада", "Ярослава"
         ];
         
-        const suffixes = [
-            "Сияющая", "Вечная", "Ткущая сны", "Звездная", 
-            "Королева пустоты", "Хранительница тайн", "Небесная", 
-            "Кристальная дева", "Забытая", "Лучезарная", "Призрачная"
+        const rusSuffixes = [
+            "Сияющая", "Вечная", "Ткущая Сны", "Звездная Дева", 
+            "Королева Ночи", "Хранительница Тайн", "Небесная", 
+            "Кристальная", "Лунная Призма", "Шепчущая", "Призрачная",
+            "Огненная", "Из Глубин", "Забытая", "Пылающая"
         ];
 
         function rand(min, max) { return Math.random() * (max - min) + min; }
 
         // Генерация красивых параметров для фрактала Жюлиа
         function generateFractalParams() {
-            // Кватернионные параметры - это магия. Небольшие изменения дают разные формы.
-            // Мы ищем значения около (0.5, 0.5, 0.5, 0.5) но с вариациями
-            
+            // Кватернионные параметры. 
             const r = () => rand(-0.8, 0.8);
             
             return {
                 // C определяет форму. 
                 c: [r(), r(), r(), r()],
                 
-                // Цвета: Ядро (темное/насыщенное) и Края (яркие/неоновые)
+                // Цвета
                 col1: [rand(0,0.5), rand(0,0.5), rand(0,0.5)], 
                 col2: [rand(0.5,1), rand(0.5,1), rand(0.5,1)]
             };
@@ -367,28 +394,24 @@
             if(actx.state === 'suspended') actx.resume();
             const now = actx.currentTime;
 
-            // Создаем "Хор" из осцилляторов
-            const baseFreq = rand(150, 400); // Базовая нота (женский диапазон)
-            const notes = [1, 1.25, 1.5, 2]; // Гармоники (Major chord)
+            // Создаем "Хор"
+            const baseFreq = rand(150, 400);
+            const notes = [1, 1.25, 1.5, 2]; // Мажорный аккорд
 
             notes.forEach((mult, i) => {
                 const osc = actx.createOscillator();
                 const gain = actx.createGain();
                 const pan = actx.createStereoPanner();
 
-                // Sine waves for soft sound
                 osc.type = 'sine';
                 osc.frequency.value = baseFreq * mult;
-                
-                // Slight detune for warmth
-                osc.detune.value = rand(-10, 10);
+                osc.detune.value = rand(-10, 10); // Живой звук
 
-                // Envelope
+                // Огибающая звука (Attack -> Release)
                 gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.1 / (i+1), now + 1); // Slow attack
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 6); // Very long release (Reverb fake)
+                gain.gain.linearRampToValueAtTime(0.1 / (i+1), now + 1); 
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 6); 
 
-                // Pan width
                 pan.pan.value = rand(-0.8, 0.8);
 
                 osc.connect(gain);
@@ -413,9 +436,9 @@
             const params = generateFractalParams();
             targetState = params;
 
-            // 2. Генерация имени
-            const name = femaleNames[Math.floor(Math.random() * femaleNames.length)];
-            const title = suffixes[Math.floor(Math.random() * suffixes.length)];
+            // 2. Генерация имени (РУС)
+            const name = rusNames[Math.floor(Math.random() * rusNames.length)];
+            const title = rusSuffixes[Math.floor(Math.random() * rusSuffixes.length)];
             
             // 3. UI Update
             nameEl.classList.remove('visible');
@@ -423,7 +446,7 @@
 
             setTimeout(() => {
                 nameEl.innerText = `${name}`;
-                dnaEl.innerText = title; // Используем суффикс как подзаголовок
+                dnaEl.innerText = title;
                 
                 nameEl.classList.add('visible');
                 dnaEl.classList.add('visible');
