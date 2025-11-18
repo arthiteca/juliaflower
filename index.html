@@ -3,164 +3,436 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Julia Flower - Генератор цветочка</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <title>Quantum Julia 3D</title>
     <style>
-        body {
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300&display=swap');
+
+        body, html {
             margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            font-family: 'Arial', sans-serif;
-            color: white;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            text-align: center;
-        }
-        
-        h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .subtitle {
-            font-size: 1.2em;
-            margin-bottom: 30px;
-            opacity: 0.9;
-        }
-        
-        .controls {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 20px;
-            margin: 20px 0;
-            display: inline-block;
-            min-width: 300px;
-        }
-        
-        .control-group {
-            margin: 15px 0;
-            text-align: left;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        
-        input[type="range"] {
             width: 100%;
-            margin: 5px 0;
+            height: 100%;
+            background-color: #000;
+            overflow: hidden;
+            font-family: 'Montserrat', sans-serif;
         }
-        
-        .value-display {
-            font-size: 0.9em;
-            opacity: 0.8;
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
         }
-        
-        .color-controls {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .color-control {
+
+        /* Интерфейс */
+        .ui-container {
+            position: absolute;
+            bottom: 40px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 10;
             text-align: center;
         }
-        
-        input[type="color"] {
-            width: 50px;
-            height: 30px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        
-        button {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+
+        .flower-title {
+            font-family: 'Cinzel', serif;
+            font-size: 3rem;
             color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 25px;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.8), 0 0 10px rgba(255, 0, 128, 0.5);
+            margin-bottom: 5px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 1s ease, transform 1s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .flower-subtitle {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+            opacity: 0;
+            transition: opacity 1s ease 0.2s;
+        }
+
+        .btn {
+            pointer-events: auto;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 16px 48px;
+            font-size: 1.1rem;
+            border-radius: 50px;
             cursor: pointer;
-            font-size: 1em;
-            margin: 10px 5px;
-            transition: transform 0.2s;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            font-family: 'Cinzel', serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
-        
-        button:hover {
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
             transform: scale(1.05);
+            border-color: #fff;
         }
-        
-        #canvas-container {
-            margin: 20px 0;
-            display: inline-block;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .visible {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
+
+        /* Loader для красоты */
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255,255,255,0.2);
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🌸 Julia Flower</h1>
-        <p class="subtitle">Генератор стилизованного 2D цветочка</p>
-        
-        <div class="controls">
-            <div class="control-group">
-                <label for="petals">Количество лепестков:</label>
-                <input type="range" id="petals" min="3" max="20" value="8">
-                <div class="value-display">Значение: <span id="petals-value">8</span></div>
-            </div>
-            
-            <div class="control-group">
-                <label for="size">Размер цветка:</label>
-                <input type="range" id="size" min="50" max="200" value="100">
-                <div class="value-display">Значение: <span id="size-value">100</span></div>
-            </div>
-            
-            <div class="control-group">
-                <label for="complexity">Сложность узора:</label>
-                <input type="range" id="complexity" min="1" max="10" value="5">
-                <div class="value-display">Значение: <span id="complexity-value">5</span></div>
-            </div>
-            
-            <div class="control-group">
-                <label for="rotation">Поворот:</label>
-                <input type="range" id="rotation" min="0" max="360" value="0">
-                <div class="value-display">Значение: <span id="rotation-value">0</span>°</div>
-            </div>
-            
-            <div class="color-controls">
-                <div class="color-control">
-                    <label for="center-color">Цвет центра:</label>
-                    <input type="color" id="center-color" value="#ff6b9d">
-                </div>
-                <div class="color-control">
-                    <label for="petal-color">Цвет лепестков:</label>
-                    <input type="color" id="petal-color" value="#ff9ecd">
-                </div>
-                <div class="color-control">
-                    <label for="background-color">Цвет фона:</label>
-                    <input type="color" id="background-color" value="#2c3e50">
-                </div>
-            </div>
-            
-            <div style="margin-top: 20px;">
-                <button onclick="randomizeFlower()">🎲 Случайный цветок</button>
-                <button onclick="saveImage()">💾 Сохранить</button>
-            </div>
-        </div>
-        
-        <div id="canvas-container"></div>
+
+    <div class="loader" id="hint">Нажмите кнопку</div>
+    <canvas id="glCanvas"></canvas>
+
+    <div class="ui-container">
+        <div class="flower-title" id="nameDisplay">Genesis</div>
+        <div class="flower-subtitle" id="dnaDisplay">4D Quaternion Fractal</div>
+        <button class="btn" id="genBtn">Воплотить</button>
     </div>
-    
-    <script src="sketch.js"></script>
+
+    <!-- Vertex Shader -->
+    <script id="vs" type="x-shader/x-vertex">
+        attribute vec2 position;
+        void main() {
+            gl_Position = vec4(position, 0.0, 1.0);
+        }
+    </script>
+
+    <!-- Fragment Shader (Raymarching Quaternion Julia) -->
+    <script id="fs" type="x-shader/x-fragment">
+        precision highp float;
+
+        uniform vec2 u_resolution;
+        uniform float u_time;
+        uniform vec4 u_quatC; // Константа C для кватернионов (4 измерения)
+        uniform vec3 u_col1;  // Цвет ядра
+        uniform vec3 u_col2;  // Цвет краев
+
+        // Функция вращения
+        mat2 rot(float a) {
+            float s = sin(a), c = cos(a);
+            return mat2(c, -s, s, c);
+        }
+
+        // Кватернионное умножение: Z = Z*Z + C
+        vec4 qSquare(vec4 q) {
+            return vec4(
+                q.x*q.x - q.y*q.y - q.z*q.z - q.w*q.w,
+                2.0*q.x*q.y,
+                2.0*q.x*q.z,
+                2.0*q.x*q.w
+            );
+        }
+
+        // Signed Distance Estimator для множества Жюлиа
+        float map(vec3 p, out float trap) {
+            vec4 z = vec4(p, 0.0);
+            float md2 = 1.0;
+            float mz2 = dot(z, z);
+
+            vec4 c = u_quatC;
+
+            trap = 100.0; // "Ловушка" орбиты для окрашивания
+
+            // Фрактальная итерация
+            for(int i = 0; i < 8; i++) {
+                // Производная для оценки расстояния |dz| = 2 * |z| * |dz|
+                md2 *= 4.0 * mz2; 
+                
+                // Z = Z^2 + C
+                z = qSquare(z) + c;
+                
+                mz2 = dot(z, z);
+                
+                // Сохраняем минимальное расстояние до начала координат для цвета
+                trap = min(trap, mz2);
+
+                if(mz2 > 4.0) break; 
+            }
+            
+            // Оценка расстояния: 0.25 * log(mz2) * sqrt(mz2/md2)
+            return 0.25 * log(mz2) * sqrt(mz2 / md2);
+        }
+
+        void main() {
+            vec2 uv = (gl_FragCoord.xy * 2.0 - u_resolution) / min(u_resolution.x, u_resolution.y);
+
+            // Камера
+            vec3 ro = vec3(0.0, 0.0, -2.8); // Положение камеры
+            vec3 rd = normalize(vec3(uv, 1.5)); // Направление луча
+
+            // Вращение камеры вокруг объекта
+            float camRot = u_time * 0.15;
+            ro.xz *= rot(camRot);
+            rd.xz *= rot(camRot);
+            
+            // Вертикальный наклон для лучшего обзора
+            ro.yz *= rot(0.3);
+            rd.yz *= rot(0.3);
+
+            // Raymarching
+            float t = 0.0;
+            float d = 0.0;
+            float trap = 0.0; // Параметр для цвета
+            
+            // Аккумуляция свечения (volumetric glow)
+            float glow = 0.0;
+
+            for(int i = 0; i < 90; i++) {
+                vec3 p = ro + rd * t;
+                float currentTrap;
+                d = map(p, currentTrap);
+                
+                // Магия свечения: чем ближе мы к фракталу, тем ярче, даже если не попали
+                glow += 0.02 / (0.02 + abs(d)); 
+
+                if(d < 0.001 || t > 5.0) {
+                    trap = currentTrap;
+                    break;
+                }
+                t += d;
+            }
+
+            vec3 col = vec3(0.0);
+
+            if(d < 0.002) {
+                // Мы попали в фрактал
+                vec3 p = ro + rd * t;
+                
+                // Простейшее освещение на основе Orbit Trap
+                // Чем "глубже" точка ушла в математику, тем она ярче или другого цвета
+                float tVal = clamp(trap, 0.0, 1.0);
+                
+                // Смешиваем два цвета на основе геометрии
+                col = mix(u_col1, u_col2, tVal);
+                
+                // Добавляем немного "затенения" по глубине
+                col *= exp(-0.3 * t);
+            }
+
+            // Добавляем свечение поверх (для эфирного эффекта)
+            col += vec3(0.8, 0.9, 1.0) * glow * 0.005;
+            col += u_col2 * glow * 0.015;
+
+            // Виньетка
+            col *= 1.0 - 0.3 * length(uv);
+
+            // Гамма
+            col = pow(col, vec3(0.4545));
+
+            gl_FragColor = vec4(col, 1.0);
+        }
+    </script>
+
+    <script>
+        const canvas = document.getElementById('glCanvas');
+        const gl = canvas.getContext('webgl');
+
+        if (!gl) alert("WebGL не поддерживается!");
+
+        // --- Shader Boilerplate ---
+        function createShader(gl, type, src) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, src);
+            gl.compileShader(shader);
+            if(!gl.getShaderParameter(shader, gl.COMPILE_STATUS)){
+                console.error(gl.getShaderInfoLog(shader));
+                return null;
+            }
+            return shader;
+        }
+        
+        const prog = gl.createProgram();
+        gl.attachShader(prog, createShader(gl, gl.VERTEX_SHADER, document.getElementById('vs').text));
+        gl.attachShader(prog, createShader(gl, gl.FRAGMENT_SHADER, document.getElementById('fs').text));
+        gl.linkProgram(prog);
+        gl.useProgram(prog);
+
+        const buf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
+        const posLoc = gl.getAttribLocation(prog, 'position');
+        gl.enableVertexAttribArray(posLoc);
+        gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+        // --- Uniforms ---
+        const uRes = gl.getUniformLocation(prog, 'u_resolution');
+        const uTime = gl.getUniformLocation(prog, 'u_time');
+        const uQuatC = gl.getUniformLocation(prog, 'u_quatC');
+        const uCol1 = gl.getUniformLocation(prog, 'u_col1');
+        const uCol2 = gl.getUniformLocation(prog, 'u_col2');
+
+        // --- Logic ---
+        
+        // Текущие и целевые значения для анимации перехода (morphing)
+        let currentState = {
+            c: [0.3, 0.5, 0.4, 0.2], // Начальная форма
+            col1: [0.1, 0.0, 0.2],
+            col2: [1.0, 0.5, 0.2]
+        };
+        
+        let targetState = { ...currentState };
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function render(time) {
+            time *= 0.001;
+
+            // Плавный морфинг параметров (Lerp)
+            const speed = 0.02;
+            for(let i=0; i<4; i++) currentState.c[i] += (targetState.c[i] - currentState.c[i]) * speed;
+            for(let i=0; i<3; i++) currentState.col1[i] += (targetState.col1[i] - currentState.col1[i]) * speed;
+            for(let i=0; i<3; i++) currentState.col2[i] += (targetState.col2[i] - currentState.col2[i]) * speed;
+
+            gl.uniform2f(uRes, canvas.width, canvas.height);
+            gl.uniform1f(uTime, time);
+            gl.uniform4fv(uQuatC, currentState.c);
+            gl.uniform3fv(uCol1, currentState.col1);
+            gl.uniform3fv(uCol2, currentState.col2);
+
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+            requestAnimationFrame(render);
+        }
+        render(0);
+
+        // --- Generator Logic ---
+
+        const femaleNames = [
+            "Anastasia", "Seraphina", "Isolde", "Ophelia", "Genevieve", 
+            "Cassandra", "Valentina", "Dominiqua", "Eleonora", "Ariadne",
+            "Calista", "Lorelei", "Magnolia", "Octavia", "Persephone",
+            "Rosalind", "Vivienne", "Zephyrine", "Lysandra", "Melisandre",
+            "Evangeline", "Thalia", "Calliope", "Selene", "Freya"
+        ];
+        
+        const suffixes = [
+            "Сияющая", "Вечная", "Ткущая сны", "Звездная", 
+            "Королева пустоты", "Хранительница тайн", "Небесная", 
+            "Кристальная дева", "Забытая", "Лучезарная", "Призрачная"
+        ];
+
+        function rand(min, max) { return Math.random() * (max - min) + min; }
+
+        // Генерация красивых параметров для фрактала Жюлиа
+        function generateFractalParams() {
+            // Кватернионные параметры - это магия. Небольшие изменения дают разные формы.
+            // Мы ищем значения около (0.5, 0.5, 0.5, 0.5) но с вариациями
+            
+            const r = () => rand(-0.8, 0.8);
+            
+            return {
+                // C определяет форму. 
+                c: [r(), r(), r(), r()],
+                
+                // Цвета: Ядро (темное/насыщенное) и Края (яркие/неоновые)
+                col1: [rand(0,0.5), rand(0,0.5), rand(0,0.5)], 
+                col2: [rand(0.5,1), rand(0.5,1), rand(0.5,1)]
+            };
+        }
+
+        // --- Audio System ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const actx = new AudioContext();
+        
+        function playEtherealSound() {
+            if(actx.state === 'suspended') actx.resume();
+            const now = actx.currentTime;
+
+            // Создаем "Хор" из осцилляторов
+            const baseFreq = rand(150, 400); // Базовая нота (женский диапазон)
+            const notes = [1, 1.25, 1.5, 2]; // Гармоники (Major chord)
+
+            notes.forEach((mult, i) => {
+                const osc = actx.createOscillator();
+                const gain = actx.createGain();
+                const pan = actx.createStereoPanner();
+
+                // Sine waves for soft sound
+                osc.type = 'sine';
+                osc.frequency.value = baseFreq * mult;
+                
+                // Slight detune for warmth
+                osc.detune.value = rand(-10, 10);
+
+                // Envelope
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.1 / (i+1), now + 1); // Slow attack
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 6); // Very long release (Reverb fake)
+
+                // Pan width
+                pan.pan.value = rand(-0.8, 0.8);
+
+                osc.connect(gain);
+                gain.connect(pan);
+                pan.connect(actx.destination);
+
+                osc.start(now);
+                osc.stop(now + 7);
+            });
+        }
+
+        // --- Interactions ---
+        const btn = document.getElementById('genBtn');
+        const nameEl = document.getElementById('nameDisplay');
+        const dnaEl = document.getElementById('dnaDisplay');
+        const hintEl = document.getElementById('hint');
+
+        btn.addEventListener('click', () => {
+            hintEl.style.display = 'none';
+            
+            // 1. Генерация параметров
+            const params = generateFractalParams();
+            targetState = params;
+
+            // 2. Генерация имени
+            const name = femaleNames[Math.floor(Math.random() * femaleNames.length)];
+            const title = suffixes[Math.floor(Math.random() * suffixes.length)];
+            
+            // 3. UI Update
+            nameEl.classList.remove('visible');
+            dnaEl.classList.remove('visible');
+
+            setTimeout(() => {
+                nameEl.innerText = `${name}`;
+                dnaEl.innerText = title; // Используем суффикс как подзаголовок
+                
+                nameEl.classList.add('visible');
+                dnaEl.classList.add('visible');
+            }, 500);
+
+            // 4. Звук
+            playEtherealSound();
+        });
+
+    </script>
 </body>
 </html>
